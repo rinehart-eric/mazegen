@@ -1,11 +1,8 @@
-import javax.swing.JFrame;
 import java.util.Stack;
 import java.util.ArrayList;
 import java.lang.Math;
 
-public class Maze extends JFrame {
-	private static final long serialVersionUID = 1L;
-
+public class Maze {
 	private int rows;
 	private int cols;
 	private Cell[][] cells;
@@ -95,12 +92,12 @@ public class Maze extends JFrame {
 		return cells[row][col];
 	}
 	
-	public Cell getStartCell() {
-		return getCellAt(0, 0);
+	public boolean isStartCell(int x, int y) {
+		return x == 0 && y == 0;
 	}
 	
-	public Cell getEndCell() {
-		return getCellAt(rows - 1, cols - 1);
+	public boolean isEndCell(int x, int y) {
+		return x == rows - 1 && y == cols - 1;
 	}
 	
 	public static class Cell {

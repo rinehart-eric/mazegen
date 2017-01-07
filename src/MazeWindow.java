@@ -12,7 +12,7 @@ import javax.swing.SwingUtilities;
 public class MazeWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 
-	private JButton[][] tiles;
+	private Tile[][] tiles;
 	
 	private int currentX = 1;
 	private int currentY = 1;
@@ -29,9 +29,39 @@ public class MazeWindow extends JFrame {
 		int dispCols = maze.getColCount() * 2 + 1;
 		
 		JPanel main = new JPanel(new GridLayout(dispRows, dispCols));
-		tiles = new JButton[dispRows][dispCols];
+		tiles = new Tile[dispRows][dispCols];
 		
-		KeyAdapter moveAdapter = new KeyAdapter() {
+		for (int i = 0; i < dispRows; i++) {
+			for (int j = 0; j < dispCols; j++) {
+				tiles[i][j] = new Tile();
+				tiles[i][j].setEnabled(false);
+				main.add(tiles[i][j]);
+			}
+		}
+		
+		for (int i = 1; i < dispRows; i += 2) {
+			for (int j = 1; j < dispCols; j += 2) {
+				Maze.Cell cell = maze.getCellAt(dispToCell(i), dispToCell(j));
+				
+				if (maze.isStartCell(cell.getRow(), cell.getCol())) {
+					tiles[i][j].setType(Tile.TileType.START);
+				} else if (maze.isEndCell(cell.getRow(), cell.getCol())) {
+					tiles[i][j].setType(Tile.TileType.END);
+				} else {
+					tiles[i][j].setType(Tile.TileType.EMPTY);
+				}
+				
+				if (!cell.hasRightWall()) {
+					tiles[i][j+1].setType(Tile.TileType.EMPTY);
+				}
+				
+				if (!cell.hasBottomWall()) {
+					tiles[i+1][j].setType(Tile.TileType.EMPTY);
+				}
+			}
+		}
+		
+		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				int dX = 0, dY = 0;
 				switch (e.getKeyCode()) {
@@ -48,51 +78,55 @@ public class MazeWindow extends JFrame {
 					dY = -1;
 					break;
 				}
-				if (tiles[currentX + dX][currentY + dY].getBackground() != Color.black) {
-					tiles[currentX][currentY].setBackground(Color.white);
+				if (tiles[currentX + dX][currentY + dY].type() != Tile.TileType.WALL) {
+					tiles[currentX][currentY].setType(Tile.TileType.EMPTY);
 					currentX += dX;
 					currentY += dY;
-					tiles[currentX][currentY].setBackground(Color.darkGray);
+					tiles[currentX][currentY].setType(Tile.TileType.OCCUPIED);
 				}
 			}
-		};
-		
-		for (int i = 0; i < dispRows; i++) {
-			for (int j = 0; j < dispCols; j++) {
-				tiles[i][j] = new JButton();
-				tiles[i][j].setBackground(Color.black);
-				tiles[i][j].addKeyListener(moveAdapter);
-				main.add(tiles[i][j]);
-			}
-		}
-		
-		for (int i = 1; i < dispRows; i += 2) {
-			for (int j = 1; j < dispCols; j += 2) {
-				Maze.Cell cell = maze.getCellAt((i - 1) / 2, (j - 1) / 2);
-				
-				if (cell == maze.getStartCell()) {
-					tiles[i][j].setBackground(Color.green);
-				} else if (cell == maze.getEndCell()) {
-					tiles[i][j].setBackground(Color.red);
-				} else {
-					tiles[i][j].setBackground(Color.white);
-				}
-				
-				if (!cell.hasRightWall()) {
-					tiles[i][j+1].setBackground(Color.white);
-				}
-				
-				if (!cell.hasBottomWall()) {
-					tiles[i+1][j].setBackground(Color.white);
-				}
-			}
-		}
-		
-		addKeyListener(moveAdapter);
+		});
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(main, BorderLayout.CENTER);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		setSize(dispCols*20, dispRows*20);
+	}
+	
+	private int dispToCell(int coord) {
+		return (coord - 1) / 2;
+	}
+	
+	private static class Tile extends JButton {
+		private static final long serialVersionUID = 1L;
+		
+		public static enum TileType {
+			WALL(Color.black),
+			EMPTY(Color.white),
+			OCCUPIED(Color.lightGray),
+			START(Color.green),
+			END(Color.red);
+			
+			public Color color;
+			
+			private TileType(Color color) {
+				this.color = color;
+			}
+		}
+		
+		private TileType type;
+		
+		public Tile() {
+			setType(TileType.WALL);
+		}
+		
+		public void setType(TileType type) {
+			this.type = type;
+			setBackground(type.color);
+		}
+		
+		public TileType type() {
+			return type;
+		}
 	}
 }
