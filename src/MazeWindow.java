@@ -7,6 +7,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class MazeWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -17,7 +18,10 @@ public class MazeWindow extends JFrame {
 	private int currentY = 1;
 	
 	public static void main(String[] args) {
-		new MazeWindow(new Maze(4, 4)).setVisible(true);
+		Maze maze = new Maze(16, 30);
+		maze.generateMaze();
+		
+		SwingUtilities.invokeLater(() -> new MazeWindow(maze).setVisible(true));
 	}
 	
 	public MazeWindow(Maze maze) {
@@ -27,11 +31,37 @@ public class MazeWindow extends JFrame {
 		JPanel main = new JPanel(new GridLayout(dispRows, dispCols));
 		tiles = new JButton[dispRows][dispCols];
 		
+		KeyAdapter moveAdapter = new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				int dX = 0, dY = 0;
+				switch (e.getKeyCode()) {
+				case KeyEvent.VK_UP:
+					dX = -1;
+					break;
+				case KeyEvent.VK_DOWN:
+					dX = 1;
+					break;
+				case KeyEvent.VK_RIGHT:
+					dY = 1;
+					break;
+				case KeyEvent.VK_LEFT:
+					dY = -1;
+					break;
+				}
+				if (tiles[currentX + dX][currentY + dY].getBackground() != Color.black) {
+					tiles[currentX][currentY].setBackground(Color.white);
+					currentX += dX;
+					currentY += dY;
+					tiles[currentX][currentY].setBackground(Color.darkGray);
+				}
+			}
+		};
+		
 		for (int i = 0; i < dispRows; i++) {
 			for (int j = 0; j < dispCols; j++) {
 				tiles[i][j] = new JButton();
 				tiles[i][j].setBackground(Color.black);
-				tiles[i][j].addKeyListener(new TAdapter());
+				tiles[i][j].addKeyListener(moveAdapter);
 				main.add(tiles[i][j]);
 			}
 		}
@@ -58,37 +88,11 @@ public class MazeWindow extends JFrame {
 			}
 		}
 		
-		addKeyListener(new TAdapter());
+		addKeyListener(moveAdapter);
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(main, BorderLayout.CENTER);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		setSize(dispCols*20, dispRows*20);
-	}
-	
-	private class TAdapter extends KeyAdapter {
-		public void keyPressed(KeyEvent e) {
-			int dX = 0, dY = 0;
-			switch (e.getKeyCode()) {
-			case KeyEvent.VK_UP:
-				dX = -1;
-				break;
-			case KeyEvent.VK_DOWN:
-				dX = 1;
-				break;
-			case KeyEvent.VK_RIGHT:
-				dY = 1;
-				break;
-			case KeyEvent.VK_LEFT:
-				dY = -1;
-				break;
-			}
-			if (tiles[currentX + dX][currentY + dY].getBackground() != Color.black) {
-				tiles[currentX][currentY].setBackground(Color.white);
-				currentX += dX;
-				currentY += dY;
-				tiles[currentX][currentY].setBackground(Color.darkGray);
-			}
-		}
 	}
 }

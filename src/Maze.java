@@ -22,22 +22,24 @@ public class Maze extends JFrame {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
-		generateMaze();
 	}
 
 	public void generateMaze() {
 		currentCell = cells[0][0];
 		currentCell.markVisited();
+		
+		int[] dRow = { 0, 0, 1, -1 };
+		int[] dCol = { 1, -1, 0, 0 };
 		while (anyCellsUnvisited()) {
 			ArrayList<Cell> unvisitedAdjacent = new ArrayList<>();
-			if (currentCell.getX() > 0 && cells[currentCell.getX()-1][currentCell.getY()].getVisited() == false)
-				unvisitedAdjacent.add(cells[currentCell.getX()-1][currentCell.getY()]);
-			if (currentCell.getY() > 0 && cells[currentCell.getX()][currentCell.getY()-1].getVisited() == false)
-				unvisitedAdjacent.add(cells[currentCell.getX()][currentCell.getY()-1]);
-			if (currentCell.getX() < rows - 1 && cells[currentCell.getX()+1][currentCell.getY()].getVisited() == false)
-				unvisitedAdjacent.add(cells[currentCell.getX()+1][currentCell.getY()]);
-			if (currentCell.getY() < cols - 1 && cells[currentCell.getX()][currentCell.getY()+1].getVisited() == false)
-				unvisitedAdjacent.add(cells[currentCell.getX()][currentCell.getY()+1]);
+			for (int i = 0; i < dRow.length; i++) {
+				int adjRow = currentCell.getRow() + dRow[i];
+				int adjCol = currentCell.getCol() + dCol[i];
+				if (inBounds(adjRow, adjCol) && !cells[adjRow][adjCol].visited()) {
+					unvisitedAdjacent.add(cells[adjRow][adjCol]);
+				}
+			}
+			
 			if (unvisitedAdjacent.size() > 0 && currentCell != cells[rows - 1][cols - 1]) {
 				Cell newCell = unvisitedAdjacent.get((int)(Math.random() * unvisitedAdjacent.size()));
 				cellStack.push(currentCell);
@@ -49,15 +51,19 @@ public class Maze extends JFrame {
 			} else {
 				do {
 					currentCell = cells[(int)(Math.random() * rows)][(int)(Math.random() * cols)];
-				} while (currentCell.getVisited());
+				} while (currentCell.visited());
 			}
 		}
+	}
+	
+	private boolean inBounds(int row, int col) {
+		return row >= 0 && col >= 0 && row < rows && col < cols;
 	}
 
 	private boolean anyCellsUnvisited() {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
-				if (!cells[i][j].getVisited()) {
+				if (!cells[i][j].visited()) {
 					return true;
 				}
 			}
@@ -66,11 +72,11 @@ public class Maze extends JFrame {
 	}
 
 	private void removeCommonWall(Cell cell1, Cell cell2) {
-		if (cell1.getX() < cell2.getX()) {
+		if (cell1.getRow() < cell2.getRow()) {
 			cell1.removeBottomWall();
-		} else if (cell1.getY() < cell2.getY()) {
+		} else if (cell1.getCol() < cell2.getCol()) {
 			cell1.removeRightWall();
-		} else if (cell1.getX() > cell2.getX()) {
+		} else if (cell1.getRow() > cell2.getRow()) {
 			cell2.removeBottomWall();
 		} else {
 			cell2.removeRightWall();
@@ -98,26 +104,26 @@ public class Maze extends JFrame {
 	}
 	
 	public static class Cell {
-		private int x;
-		private int y;
+		private int row;
+		private int col;
 		private boolean visited = false;
 		private boolean rightWall = true;
 		private boolean bottomWall = true;
 
-		public Cell(int x, int y) {
-			this.x = x;
-			this.y = y;
+		public Cell(int row, int col) {
+			this.row = row;
+			this.col = col;
 		}
 
-		public int getX() {
-			return x;
+		public int getRow() {
+			return row;
 		}
 
-		public int getY() {
-			return y;
+		public int getCol() {
+			return col;
 		}
 
-		public boolean getVisited() {
+		public boolean visited() {
 			return visited;
 		}
 
